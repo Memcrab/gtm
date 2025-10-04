@@ -3,6 +3,7 @@
 set -ex
 
 export PATH=/c/msys64/mingw64/bin:/c/msys64/usr/bin:/c/Go/bin:/c/gopath/go/bin:$PATH
+export GO111MODULE=off
 
 GIT2GO_PATH="${GOPATH}/src/github.com/libgit2/git2go"
 LIBGIT2_BUILD="${GIT2GO_PATH}/vendor/libgit2/build"
@@ -15,7 +16,8 @@ cmake -DTHREADSAFE=ON \
       -DBUILD_CLAR=OFF \
       -DBUILD_SHARED_LIBS=OFF \
       -DCMAKE_C_FLAGS=-fPIC \
-      -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
+      -DCMAKE_BUILD_TYPE="Release" \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
       -DCMAKE_INSTALL_PREFIX=../install \
       -DWINHTTP=OFF \
       -DUSE_BUNDLED_ZLIB=ON \
@@ -27,11 +29,11 @@ cmake -DTHREADSAFE=ON \
 cmake --build .
 
 cd "${GOPATH}/src/github.com/git-time-metric/gtm"
-go get -d ./...
-go test --tags static $(go list ./... | grep -v vendor)
+GO111MODULE=on go run ./script/sync_vendor.go
+GO111MODULE=off go test --tags static $(GO111MODULE=off go list ./... | grep -v vendor)
 if [[ "${APPVEYOR_REPO_TAG}" = true ]]; then
     version=${APPVEYOR_REPO_TAG_NAME}
-    go build -v --tags static -ldflags "-X main.Version=${version}"
+    go build -v --tags static -ldflags "-s -w -X main.Version=${version}"
 
     # make sure version is set correctly
     v="$(${GOPATH}/src/github.com/git-time-metric/gtm/gtm.exe verify ${version})"
@@ -42,7 +44,7 @@ if [[ "${APPVEYOR_REPO_TAG}" = true ]]; then
     tar -zcf "gtm.${APPVEYOR_REPO_TAG_NAME}.windows.tar.gz" gtm.exe
 else
     version='0.0.0-dev'
-    go build -v --tags static -ldflags "-X main.Version=${version}"
+    go build -v --tags static -ldflags "-s -w -X main.Version=${version}"
 
     # make sure version is set correctly
     v="$(${GOPATH}/src/github.com/git-time-metric/gtm/gtm.exe verify ${version})"
