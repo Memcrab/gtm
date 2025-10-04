@@ -2,10 +2,13 @@ BINARY          := bin/gtm
 BASE_VERSION    := 1.4.0
 VERSION         := $(shell git describe --tags --match 'v*' --dirty 2>/dev/null)
 COMMIT          := $(shell git rev-parse --short HEAD 2>/dev/null)
+DEV_SUFFIX     ?= 0
 ifeq ($(strip $(VERSION)),)
 VERSION         := $(BASE_VERSION)
+ifeq ($(DEV_SUFFIX),1)
 ifneq ($(strip $(COMMIT)),)
 VERSION         := $(VERSION)-dev-$(COMMIT)
+endif
 endif
 endif
 LDFLAGS         := -ldflags "-X main.Version=$(VERSION)"
