@@ -3952,3 +3952,4 @@ tags
 .tmp-home/Library/Application Support/go/telemetry/local/upload.token
 .tmp-home/Library/Application Support/go/telemetry/local/vet@go1.25.1-go1.25.1-darwin-arm64-2025-10-04.v1.count
 .tmp-home/Library/Application Support/go/telemetry/local/weekends
+.gopath
