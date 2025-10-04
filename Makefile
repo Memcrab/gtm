@@ -1,15 +1,29 @@
-BINARY         = bin/gtm
-VERSION        = 0.0.0-dev
-COMMIT         = $(shell git show -s --format='%h' HEAD)
-LDFLAGS        = -ldflags "-X main.Version=$(VERSION)-$(COMMIT)"
-GIT2GO_VERSION = v27
-GIT2GO_PATH    = $(GOPATH)/src/github.com/libgit2/git2go
-LIBGIT2_PATH   = $(GIT2GO_PATH)/vendor/libgit2
-PKGS           = $(shell go list ./... | grep -v vendor)
-BUILD_TAGS     = static
+BINARY          := bin/gtm
+VERSION         := $(shell git describe --tags --always --dirty 2>/dev/null)
+ifeq ($(strip $(VERSION)),)
+VERSION         := 0.0.0-dev
+endif
+COMMIT          := $(shell git rev-parse --short HEAD 2>/dev/null)
+LDFLAGS         := -ldflags "-X main.Version=$(VERSION)"
+BUILD_TAGS     ?= static
+TEST_OPTIONS   ?=
+PKG_CONFIG_FILE := .cache/libgit2_pkgconfig
+GOCACHE        ?= $(CURDIR)/.gocache
+GOMODCACHE     ?= $(CURDIR)/.gomodcache
+ENV_TOOLS       = GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE)
+ENV_VARS        = PKG_CONFIG_PATH=$$(cat $(PKG_CONFIG_FILE)):$${PKG_CONFIG_PATH} $(ENV_TOOLS)
+HOME_DIR       ?= $(CURDIR)/.tmp-home
+PKGS            = ./...
 
-build:
-	go build --tags '$(BUILD_TAGS)' $(LDFLAGS) -o $(BINARY)
+.DEFAULT_GOAL := build
+
+.PHONY: build debug profile debug-profile test test-verbose clean deps libgit2 tidy install fmt lint
+
+deps: tidy libgit2
+
+build: libgit2
+	@mkdir -p $(dir $(BINARY))
+	@$(ENV_VARS) go build -tags '$(BUILD_TAGS)' $(LDFLAGS) -o $(BINARY)
 
 debug: BUILD_TAGS += debug
 debug: build
@@ -20,71 +34,32 @@ profile: build
 debug-profile: BUILD_TAGS += debug profile
 debug-profile: build
 
-test:
-	@go test $(TEST_OPTIONS) --tags '$(BUILD_TAGS)' $(PKGS) | grep --colour -E "FAIL|$$"
+test: libgit2
+	@mkdir -p $(HOME_DIR)
+	@HOME=$(HOME_DIR) GTM_HOME=$(HOME_DIR) $(ENV_VARS) go test $(TEST_OPTIONS) -tags '$(BUILD_TAGS)' $(PKGS)
 
 test-verbose: TEST_OPTIONS += -v
 test-verbose: test
 
-lint:
-	-@$(call color_echo, 4, "\nGo Vet"); \
-		go vet --all --tags '$(BUILD_TAGS)' $(PKGS)
-	-@$(call color_echo, 4, "\nError Check"); \
-		errcheck -ignoretests -tags '$(BUILD_TAGS)' $(PKGS)
-	-@$(call color_echo, 4, "\nIneffectual Assign"); \
-		ineffassign ./
-	-@$(call color_echo, 4, "\nStatic Check"); \
-		staticcheck --tests=false --tags '$(BUILD_TAGS)' $(PKGS)
-	-@$(call color_echo, 4, "\nGo Simple"); \
-		gosimple --tests=false --tags '$(BUILD_TAGS)' $(PKGS)
-	-@$(call color_echo, 4, "\nUnused"); \
-		unused --tests=false --tags '$(BUILD_TAGS)' $(PKGS)
-	-@$(call color_echo, 4, "\nGo Lint"); \
-		golint $(PKGS)
-	-@$(call color_echo, 4, "\nGo Format"); \
-		go fmt $(PKGS)
-	-@$(call color_echo, 4, "\nLicense Check"); \
-		ag --go -L license . |grep -v vendor/
+install: libgit2
+	@$(ENV_VARS) go install -tags '$(BUILD_TAGS)' $(LDFLAGS)
 
-install:
-	go install --tags '$(BUILD_TAGS)' $(LDFLAGS)
+fmt:
+	go fmt $(PKGS)
+
+lint:
+	go vet -tags '$(BUILD_TAGS)' $(PKGS)
 
 clean:
-	go clean
-	rm bin/*
+	-@chmod -R u+w $(GOMODCACHE) 2>/dev/null || true
+	rm -rf $(BINARY) $(PKG_CONFIG_FILE) $(GOCACHE) $(GOMODCACHE) $(HOME_DIR)
 
-git2go-install:
-	[[ -d $(GIT2GO_PATH) ]] || git clone https://github.com/libgit2/git2go.git $(GIT2GO_PATH) && \
-	cd ${GIT2GO_PATH} && \
-	git pull && \
-	git checkout -qf $(GIT2GO_VERSION) && \
-	git submodule update --init
+libgit2: $(PKG_CONFIG_FILE)
 
-git2go: git2go-install
-	cd $(LIBGIT2_PATH) && \
-	mkdir -p install/lib && \
-	mkdir -p build && \
-	cd build && \
-	cmake -DTHREADSAFE=ON \
-		  -DBUILD_CLAR=OFF \
-		  -DBUILD_SHARED_LIBS=OFF \
-		  -DCMAKE_C_FLAGS=-fPIC \
-		  -DUSE_SSH=OFF \
-		  -DCURL=OFF \
-		  -DUSE_HTTPS=OFF \
-		  -DUSE_BUNDLED_ZLIB=ON \
-		  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
-		  -DCMAKE_INSTALL_PREFIX=../install \
-		  .. && \
-	cmake --build .
+$(PKG_CONFIG_FILE):
+	@mkdir -p $(dir $@)
+	@echo "Preparing libgit2 (this may take a few minutes on first run)..."
+	@PKG_PATH=$$( $(ENV_TOOLS) script/setup_libgit2.sh ) && echo $$PKG_PATH > $@
 
-git2go-clean:
-	[[ -d $(GIT2GO_PATH) ]] && rm -rf $(GIT2GO_PATH)
-
-define color_echo
-      @tput setaf $1
-      @echo $2
-      @tput sgr0
-endef
-
-.PHONY: build test vet fmt install clean git2go-install git2go-build all-tags profile debug
+tidy:
+	go mod tidy

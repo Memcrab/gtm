@@ -11,6 +11,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -89,12 +90,23 @@ func (i *Index) projects() []string {
 	return keys
 }
 
-func (i *Index) path() (string, error) {
+func configDir() (string, error) {
+	if override := strings.TrimSpace(os.Getenv("GTM_HOME")); override != "" {
+		return override, nil
+	}
 	u, err := user.Current()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(u.HomeDir, ".git-time-metric", "project.json"), nil
+	return filepath.Join(u.HomeDir, ".git-time-metric"), nil
+}
+
+func (i *Index) path() (string, error) {
+	dir, err := configDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "project.json"), nil
 }
 
 func (i *Index) load() error {
