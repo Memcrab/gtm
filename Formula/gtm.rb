@@ -2,7 +2,7 @@ class Gtm < Formula
   desc "Simple, automatic Git time tracking"
   homepage "https://github.com/memcrab/gtm"
   url "https://github.com/memcrab/gtm.git",
-      revision: "d0c43d7f42878f9242ac11240733267cdd83b500"
+      revision: "e164902762f78e20bc3a95bf412c88fb2d5d6eb6"
   version "1.4.0"
   license "MIT"
   head "https://github.com/memcrab/gtm.git", branch: "master"
