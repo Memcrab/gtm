@@ -1,9 +1,13 @@
 BINARY          := bin/gtm
-VERSION         := $(shell git describe --tags --always --dirty 2>/dev/null)
-ifeq ($(strip $(VERSION)),)
-VERSION         := 0.0.0-dev
-endif
+BASE_VERSION    := 1.4.0
+VERSION         := $(shell git describe --tags --match 'v*' --dirty 2>/dev/null)
 COMMIT          := $(shell git rev-parse --short HEAD 2>/dev/null)
+ifeq ($(strip $(VERSION)),)
+VERSION         := $(BASE_VERSION)
+ifneq ($(strip $(COMMIT)),)
+VERSION         := $(VERSION)-dev-$(COMMIT)
+endif
+endif
 LDFLAGS         := -ldflags "-X main.Version=$(VERSION)"
 BUILD_TAGS     ?= static
 TEST_OPTIONS   ?=

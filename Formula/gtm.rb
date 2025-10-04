@@ -3,7 +3,7 @@ class Gtm < Formula
   homepage "https://github.com/memcrab/gtm"
   url "https://github.com/memcrab/gtm.git",
       revision: "4d326cba938df15c2be0009bd974b395fdfb7163"
-  version "0.0.0-dev"
+  version "1.4.0"
   license "MIT"
   head "https://github.com/memcrab/gtm.git", branch: "master"
 
