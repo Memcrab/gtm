@@ -41,8 +41,8 @@ Simply install a plugin for your favorite editor and the GTM command line utilit
 The simplest way to install is to use [Homebrew](http://brew.sh)
 
 ```
-brew tap git-time-metric/gtm
-brew install gtm
+brew tap memcrab/gtm
+brew install memcrab/gtm/gtm
 ```
 
 **Windows**
@@ -54,13 +54,41 @@ brew install gtm
 The simplest way to install is to use [Linuxbrew](http://linuxbrew.sh/)
 
 ```
-brew tap git-time-metric/gtm
-brew install gtm
+brew tap memcrab/gtm
+brew install memcrab/gtm/gtm
 ```
 
 **Manually install for Linux, OSX or Windows**
 
-- Download and install the executable from [here](https://github.com/git-time-metric/gtm/releases/latest)
+- Download and install the executable from [here](https://github.com/memcrab/gtm/releases/latest)
+
+### Build from source
+
+Building locally uses the Go toolchain with modules and a vendored libgit2 that is compiled automatically.
+
+Prerequisites:
+
+- Go 1.21 or newer in your PATH
+- `cmake`, `pkg-config`, `git`, and a C compiler (CLT/Xcode on macOS, build-essential on Linux)
+
+Steps:
+
+```
+git clone https://github.com/memcrab/gtm.git
+cd gtm
+make build        # produces bin/gtm, first run also builds libgit2
+make test         # optional, runs the unit test suite
+```
+
+The build caches dependencies under `.gomodcache/` to avoid polluting your global Go module cache. To rebuild from scratch run `make clean`.
+
+If you need to target a different libgit2 release, override the tag when invoking make:
+
+```
+LIBGIT2_TAG=v0.27.10 make build
+```
+
+The helper script will fetch and build the requested version before compiling GTM.
 
 
 ### Install a plugin for your editor

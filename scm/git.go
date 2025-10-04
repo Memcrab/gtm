@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/git-time-metric/gtm/util"
-	"github.com/libgit2/git2go"
+	"github.com/libgit2/git2go/v27"
 )
 
 // Workdir returns the working directory for a repo
