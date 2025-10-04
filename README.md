@@ -41,7 +41,14 @@ Simply install a plugin for your favorite editor and the GTM command line utilit
 The simplest way to install is to use [Homebrew](http://brew.sh)
 
 ```
-brew tap memcrab/gtm
+brew install --build-from-source \\
+  https://raw.githubusercontent.com/memcrab/gtm/master/Formula/gtm.rb
+```
+
+Alternatively, tap the repository once and install from there:
+
+```
+brew tap memcrab/gtm https://github.com/memcrab/gtm.git
 brew install memcrab/gtm/gtm
 ```
 
@@ -54,7 +61,14 @@ brew install memcrab/gtm/gtm
 The simplest way to install is to use [Linuxbrew](http://linuxbrew.sh/)
 
 ```
-brew tap memcrab/gtm
+brew install --build-from-source \\
+  https://raw.githubusercontent.com/memcrab/gtm/master/Formula/gtm.rb
+```
+
+Alternatively (after the first time):
+
+```
+brew tap memcrab/gtm https://github.com/memcrab/gtm.git
 brew install memcrab/gtm/gtm
 ```
 
