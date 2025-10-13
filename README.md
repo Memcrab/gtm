@@ -45,7 +45,15 @@ brew install --build-from-source \\
   https://raw.githubusercontent.com/memcrab/gtm/master/Formula/gtm.rb
 ```
 
-Alternatively, tap the repository once and install from there:
+Revert to the previous version if you had it earlier.
+
+```
+brew uninstall gtm
+brew untap git-time-metric/gtm
+brew cleanup
+```
+
+Next, tap the repository once and install from there:
 
 ```
 brew tap memcrab/gtm https://github.com/memcrab/gtm.git
